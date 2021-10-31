@@ -17,6 +17,8 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
             await client.connect();
             const database = client.db('ghurbo');
             const serviceCollection = database.collection('services');
+            const adminCollection = database.collection('admin');
+            const myOrderCollection = database.collection('myOrder');
             
 
             app.get('/services', async (req, res) => {
@@ -30,11 +32,25 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
             app.get('/services/:id', async(req, res)=>{
                 const id  = req.params.id;
-                console.log("gitting one service",id);
                 const query = {_id:objectId(id)};
-                const service = await serviceCollection.findOne(query);
-                res.json(service);
+                const singleService = await serviceCollection.findOne(query);
+                res.json(singleService);
             });
+
+            //Order collection
+            app.get('/myOrder', async (req, res) => {
+                const cursor = myOrderCollection.find({});
+                const orders = await cursor.toArray();
+                res.send(orders);
+            });
+
+            //Admin collection
+            app.get('/admin', async (req, res)=>{
+                const cursor = adminCollection.find({});
+                const admin = await cursor.toArray();
+                res.json(admin);
+
+            })
 
 
           app.post('/services', async (req, res) => {
@@ -43,7 +59,14 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
               console.log(result);
               res.json(result);
           });
-
+          //insert order 
+          app.post('/myOrder', async (req, res) => {
+              const order = req.body;
+              const result = await myOrderCollection.insertOne(order);
+              console.log(result);
+              res.json(result);
+          });
+            
 
 
 
@@ -54,6 +77,13 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
             const id  = req.params.id;
             const query ={_id:objectId(id)};
             const result = await serviceCollection.deleteOne(query);
+            res.json(result);
+        })
+        //Order delete
+        app.delete('/myOrder/:id', async(req, res) => {
+            const id  = req.params.id;
+            const query ={_id:objectId(id)};
+            const result = await myOrderCollection.deleteOne(query);
             res.json(result);
         })
 
